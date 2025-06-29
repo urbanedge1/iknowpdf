@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ExternalLink, Clock, Users, Zap, Shield, 
-  CheckCircle, AlertCircle, Info, ArrowRight 
+  CheckCircle, AlertCircle, Info, ArrowRight,
+  Star, TrendingUp
 } from 'lucide-react';
 import { Tool } from '../../types/tools';
-import { ToolInterface } from './ToolInterface';
+import { EnhancedToolInterface } from './EnhancedToolInterface';
+import { useToolStore } from '../../store/toolStore';
 
 interface ToolCardProps {
   tool: Tool;
@@ -24,6 +26,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showInterface, setShowInterface] = useState(false);
+  const { getRemainingUses, getUsagePercentage } = useToolStore();
 
   const handleUse = () => {
     if (onUse()) {
@@ -31,18 +34,38 @@ export const ToolCard: React.FC<ToolCardProps> = ({
     }
   };
 
-  const remainingUses = Math.max(0, 50 - usageCount);
-  const usagePercentage = (usageCount / 50) * 100;
+  const remainingUses = getRemainingUses(tool.id);
+  const usagePercentage = getUsagePercentage(tool.id);
 
   const getStatusColor = () => {
-    if (!isAvailable) return 'text-red-500 bg-red-50';
-    if (remainingUses <= 5) return 'text-orange-500 bg-orange-50';
-    return 'text-green-500 bg-green-50';
+    if (!isAvailable) return 'text-red-500 bg-red-50 border-red-200';
+    if (remainingUses <= 5) return 'text-orange-500 bg-orange-50 border-orange-200';
+    return 'text-green-500 bg-green-50 border-green-200';
   };
 
   const getStatusIcon = () => {
     if (!isAvailable) return <AlertCircle className="w-4 h-4" />;
     return <CheckCircle className="w-4 h-4" />;
+  };
+
+  const getPopularityBadge = () => {
+    if (usageCount > 1000) {
+      return (
+        <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+          <Star className="w-3 h-3 mr-1" />
+          Popular
+        </div>
+      );
+    }
+    if (usageCount > 500) {
+      return (
+        <div className="absolute top-2 right-2 bg-gradient-to-r from-blue-400 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+          <TrendingUp className="w-3 h-3 mr-1" />
+          Trending
+        </div>
+      );
+    }
+    return null;
   };
 
   if (viewMode === 'list') {
@@ -61,10 +84,15 @@ export const ToolCard: React.FC<ToolCardProps> = ({
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <h3 className="font-semibold text-gray-900">{tool.name}</h3>
-                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${getStatusColor()}`}>
+                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs border ${getStatusColor()}`}>
                     {getStatusIcon()}
                     <span>{remainingUses} uses left</span>
                   </div>
+                  {usageCount > 100 && (
+                    <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                      {usageCount} uses
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-600 text-sm">{tool.description}</p>
                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
@@ -78,7 +106,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
                   </span>
                   <span className="flex items-center">
                     <Users className="w-3 h-3 mr-1" />
-                    {usageCount} uses
+                    {tool.maxFiles} file{tool.maxFiles !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
@@ -87,7 +115,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-50"
                 title="More info"
               >
                 <Info className="w-4 h-4" />
@@ -112,6 +140,10 @@ export const ToolCard: React.FC<ToolCardProps> = ({
 
           {/* Usage Progress Bar */}
           <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Usage: {usageCount}/50</span>
+              <span>{usagePercentage.toFixed(0)}%</span>
+            </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <motion.div
                 className={`h-2 rounded-full transition-all duration-300 ${
@@ -144,11 +176,11 @@ export const ToolCard: React.FC<ToolCardProps> = ({
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Features</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">Key Features</h4>
                   <ul className="space-y-1 text-gray-600">
                     {tool.features.slice(0, 3).map((feature, index) => (
                       <li key={index} className="flex items-center">
-                        <CheckCircle className="w-3 h-3 text-green-500 mr-2" />
+                        <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
@@ -160,7 +192,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
         </motion.div>
 
         {showInterface && (
-          <ToolInterface
+          <EnhancedToolInterface
             tool={tool}
             onClose={() => setShowInterface(false)}
           />
@@ -175,12 +207,15 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       <motion.div
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="group bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
+        className="group bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden"
         onClick={() => setIsExpanded(!isExpanded)}
       >
+        {/* Popularity Badge */}
+        {getPopularityBadge()}
+
         {/* Status Badge */}
         <div className="flex items-center justify-between mb-4">
-          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${getStatusColor()}`}>
+          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs border ${getStatusColor()}`}>
             {getStatusIcon()}
             <span>{remainingUses} left</span>
           </div>
@@ -210,6 +245,10 @@ export const ToolCard: React.FC<ToolCardProps> = ({
 
         {/* Usage Progress */}
         <div className="mb-4">
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Usage</span>
+            <span>{usagePercentage.toFixed(0)}%</span>
+          </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <motion.div
               className={`h-2 rounded-full transition-all duration-300 ${
@@ -272,13 +311,26 @@ export const ToolCard: React.FC<ToolCardProps> = ({
                   ))}
                 </ul>
               </div>
+
+              {tool.tags && tool.tags.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2 text-sm">Tags</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {tool.tags.slice(0, 5).map(tag => (
+                      <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
       </motion.div>
 
       {showInterface && (
-        <ToolInterface
+        <EnhancedToolInterface
           tool={tool}
           onClose={() => setShowInterface(false)}
         />
