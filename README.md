@@ -1,5 +1,3 @@
-# ToolSuite Pro - Professional Online Tools Suite
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![React Version](https://img.shields.io/badge/react-%5E18.3.1-blue)](https://reactjs.org/)
@@ -653,6 +651,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the ToolSuite Pro Team**
+**Made with ❤️ by the Netgain Team**
 
-For support, email us at support@toolsuitepro.com or create an issue on GitHub.
+For support, email us at mail.netgain@gmail.com or create an issue on GitHub.
